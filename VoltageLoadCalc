@@ -1,0 +1,42 @@
+#include "mex.h"
+#include <math.h>
+// input (x, eps) note that: x > 0, eps is very small positive number
+// output (lambda_real,lambda_imag)
+// 
+int factorial(int n)
+{
+	int y = 1;
+	if (n == 0)
+	{
+		return 1;
+	}
+	else
+	{
+		for (int i=n; i>0 ;--i)
+		{
+			y = y * i;
+		}
+		return y;
+	}
+}
+double min(double a, double b)
+{
+	if (a <= b)
+	{
+		return a;
+	}
+	else
+	{
+		return b;
+	}
+}
+
+double lambda_pow (double a, int k)
+{
+	double y = 1.0;
+	for (int i=0;i<k;i++)
+	{
+		y = y*a;
+	}
+	return y;
+}
