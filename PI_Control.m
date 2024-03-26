@@ -17,7 +17,7 @@ j=1;
 for ii =1:n
     PI.piIndex = PI.piIndex+1; % 第 piIndex 个buckets,依据其值施加反馈
 %% PI feedback   PI.d > 0 is an integer 
-    if PI.piIndex>PI.m && mod(PI.piIndex-PI.d,PI.m)==0  % N*m+d 时施加反馈
+    if PI.piIndex>PI.m && mod(PI.piIndex-PI.d,PI.m)==0  % N*m+d  Feedback trigger
        PI.Vg0 = 2*pi*PI.RoverQ*PI.Ig_FBid(1);           % impluse phasor single pass
        PI.Ig_FBid(1)=[];
     end
