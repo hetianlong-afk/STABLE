@@ -1,8 +1,8 @@
 function [Vc_mc,Vg_mc_track,Vg_mc_track_0,V_load,V_mc_load_0,PI]=PI_Control(PI,Vrf_ideal,Vg_mc_track_0,...
     V_mc_load_0,V_load_cpu,TbAng_coef_mc,pattern)
 % realistic PI feedback control
-% PI.m Ã¿m¸öbucketsµÄÇ»Ñ¹Æ½¾ùÖµ  For HALF, PI.m=5120, PI.d=800
-% PI.d ÑÓ³Ùd¸öbucketsÊä³ö·´À¡Á¿
+% PI.m æ¯mä¸ªbucketsçš„è…”å‹å¹³å‡å€¼  For HALF, PI.m=5120, PI.d=800
+% PI.d å»¶è¿Ÿdä¸ªbucketsè¾“å‡ºåé¦ˆé‡
 % Ig=Ig0+DIg
 % i is turn number
 % HALF.Vrf_ideal
@@ -15,10 +15,11 @@ Vg_mc_track=zeros(1,n);
 Vc_mc      =zeros(1,n);
 j=1;
 for ii =1:n
-    PI.piIndex = PI.piIndex+1; % µÚ piIndex ¸öbuckets,ÒÀ¾İÆäÖµÊ©¼Ó·´À¡
+    PI.piIndex = PI.piIndex+1; % ç¬¬ piIndex ä¸ªbuckets,ä¾æ®å…¶å€¼æ–½åŠ åé¦ˆ
 %% PI feedback   PI.d > 0 is an integer 
-    if PI.piIndex>PI.m && mod(PI.piIndex-PI.d,PI.m)==0  % N*m+d Ê±Ê©¼Ó·´À¡
-       PI.Vg0 = 2*pi*PI.RoverQ*PI.Ig;        % impluse phasor single pass
+    if PI.piIndex>PI.m && mod(PI.piIndex-PI.d,PI.m)==0  % N*m+d æ—¶æ–½åŠ åé¦ˆ
+       PI.Vg0 = 2*pi*PI.RoverQ*PI.Ig_FBid(1);        % impluse phasor single pass
+       PI.Ig_FBid(1)=[];
 %        disp(['piIndex = ',num2str(PI.piIndex),' ',num2str(PI.Vg0)]); %test
     end
 %%    
@@ -35,15 +36,16 @@ for ii =1:n
     Vc_mc(ii) = Vg_mc_track_0 + V_load(ii);    %Total voltage phasor
 %% PI feedback   
     piTrackIndex = mod(PI.piIndex,PI.m);
-    if piTrackIndex==0 %&& PI.piIndex > 5e4*n  % N*m Ê±¼ÆËãÇ»Ñ¹Æ½¾ùÊ¸Á¿,²¢ÊäËÍ¸øPI¼ÆËã·´À¡Êä³öÁ¿
+    if piTrackIndex==0 %&& PI.piIndex > 5e4*n  % N*m æ—¶è®¡ç®—è…”å‹å¹³å‡çŸ¢é‡,å¹¶è¾“é€ç»™PIè®¡ç®—åé¦ˆè¾“å‡ºé‡
         piTrackIndex = PI.m;
         PI.Vrf_mc_track(piTrackIndex) = Vc_mc(ii);%
         Vrf_mc_mean = mean(PI.Vrf_mc_track);
-        DI = (Vrf_ideal-Vrf_mc_mean)/PI.RL; % RL ¸ºÔØ×è¿¹   ´Ë´¦Ç°ºó¹ØÏµ
+        DI = (Vrf_ideal-Vrf_mc_mean)/PI.RL; % RL è´Ÿè½½é˜»æŠ—   æ­¤å¤„å‰åå…³ç³»
         PI.Integral=PI.Integral+PI.KI*DI;   % DI error signal
         PI.DIg = PI.KP*DI+PI.Integral;
-        PI.Ig = PI.Ig0 + PI.DIg;            % ·¢Éä»úµçÁ÷£¬×¢Òâ´Ë´¦Îª'+'
+        PI.Ig = PI.Ig0 + PI.DIg;            % å‘å°„æœºç”µæµï¼Œæ³¨æ„æ­¤å¤„ä¸º'+'
         PI.Ig_track = [PI.Ig_track,PI.Ig];
+        PI.Ig_FBid  = [PI.Ig_FBid,PI.Ig];
         % 1/8*Ig^2*Rs/beta_couple
 %         disp(['PI.DIg = ',num2str(PI.DIg)]); %test
     end   
