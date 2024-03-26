@@ -1,37 +1,37 @@
 % PI structure KP(s+KI/s)
-PI.m    = 5120/64; % È¡Æ½¾ù¼ä¸ô 5120 , if 5120/2  32 tap FIR
+PI.m    = 5120/64; % å–å¹³å‡é—´éš” 5120 , if 5120/2  32 tap FIR
 % 64 tap FIR 
 PI.tap  = 16;                            % for PI_Control_copy64
-PI.dIQ  = PI.m/PI.tap;   % Ò»×éIQ¼ä¸ô     % for PI_Control_copy64
-PI.d    = 800;  % ÑÓ³Ù¼ä¸ô,±ØÐëÊÇ´óÓÚ0µÄÕûÊý 800
+PI.dIQ  = PI.m/PI.tap;   % ä¸€ç»„IQé—´éš”     % for PI_Control_copy64
+PI.d    = 800;  % å»¶è¿Ÿé—´éš”,å¿…é¡»æ˜¯å¤§äºŽ0çš„æ•´æ•° 800
 
 PI.piIndex =0;
-PI.Integral=0; % initial value PI »ý·ÖÖµ
-PI.RL      = HALF.R_mc; % Ö÷Ç»¸ºÔØ×è¿¹
+PI.Integral=0; % initial value PI ç§¯åˆ†å€¼
+PI.RL      = HALF.R_mc; % ä¸»è…”è´Ÿè½½é˜»æŠ—
 
 PI.Ts = PI.m * HALF.Tb;
 % PI.Ts = PI.dIQ * HALF.Tb;
-% PI.KP = 1; % PI ¿ØÖÆÆ÷µÄ±ÈÀýÏµÊý 0.2 1 2 
-% PI.KI = HALF.w_rf/(2*HALF.Q_mc)*PI.Ts*PI.KP/64;  % PI ¿ØÖÆÆ÷µÄ»ý·ÖÏµÊý 10 50 100
+% PI.KP = 1; % PI æŽ§åˆ¶å™¨çš„æ¯”ä¾‹ç³»æ•° 0.2 1 2 
+% PI.KI = HALF.w_rf/(2*HALF.Q_mc)*PI.Ts*PI.KP/64;  % PI æŽ§åˆ¶å™¨çš„ç§¯åˆ†ç³»æ•° 10 50 100
 
-PI.KP = 1; % PI ¿ØÖÆÆ÷µÄ±ÈÀýÏµÊý 0.2 1 2 
-PI.KI = 0.002;  % PI ¿ØÖÆÆ÷µÄ»ý·ÖÏµÊý 10 50 100
-% ²âÊÔ·¢ÏÖKIÒª¾¡Á¿Ð¡£¬ÒÔ±ÜÃâ¼¤ÀøÊøÁ÷×ÝÏòÕñµ´
+PI.KP = 1; % PI æŽ§åˆ¶å™¨çš„æ¯”ä¾‹ç³»æ•° 0.2 1 2 
+PI.KI = 0.002;  % PI æŽ§åˆ¶å™¨çš„ç§¯åˆ†ç³»æ•° 10 50 100
+% æµ‹è¯•å‘çŽ°KIè¦å°½é‡å°ï¼Œä»¥é¿å…æ¿€åŠ±æŸæµçºµå‘æŒ¯è¡
 
-PI.Ig0 = HALF.Ig_mc_0;                  % ·¢Éä»úµçÁ÷Ê¸Á¿
+PI.Ig0 = HALF.Ig_mc_0;                  % å‘å°„æœºç”µæµçŸ¢é‡
 PI.DIg = 0;
-PI.Ig  = PI.Ig0;                        % ³õÊ¼ Ig=Ig0
+PI.Ig  = PI.Ig0;                        % åˆå§‹ Ig=Ig0
 PI.Vg0 = HALF.Vg_mc_0;
 PI.DI  = 0;
 PI.Ig_track=[];
+PI.Ig_FBid =[];
+PI.RoverQ = HALF.R_mc/HALF.Q_mc;  % ä¸»è…”çš„R/Qï¼Œç”¨äºŽPIåé¦ˆ
+PI.Vrf_mc_track = zeros(1,PI.m);  % ä¿æŒmä¸ªbucketsçœ‹åˆ°çš„è…”åŽ‹çŸ¢é‡
 
-PI.RoverQ = HALF.R_mc/HALF.Q_mc;  % Ö÷Ç»µÄR/Q£¬ÓÃÓÚPI·´À¡
-PI.Vrf_mc_track = zeros(1,PI.m);  % ±£³Öm¸öbuckets¿´µ½µÄÇ»Ñ¹Ê¸Á¿
-
-% RF phase modulation ²ÎÊý to test
-% mf µ÷ÖÆ¶È
+% RF phase modulation å‚æ•° to test
+% mf è°ƒåˆ¶åº¦
 PI.RFModulation_mf = 0.002;
-% wm µ÷ÖÆÆµÂÊ
+% wm è°ƒåˆ¶é¢‘çŽ‡
 PI.RFModulation_wm = 0.0012*2/HALF.T0*2*pi; %0.0025  0.002505
 % rf frequency
 PI.RFModulation_wf = HALF.w_rf;
