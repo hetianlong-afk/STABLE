@@ -18,9 +18,8 @@ for ii =1:n
     PI.piIndex = PI.piIndex+1; % 第 piIndex 个buckets,依据其值施加反馈
 %% PI feedback   PI.d > 0 is an integer 
     if PI.piIndex>PI.m && mod(PI.piIndex-PI.d,PI.m)==0  % N*m+d 时施加反馈
-       PI.Vg0 = 2*pi*PI.RoverQ*PI.Ig_FBid(1);        % impluse phasor single pass
+       PI.Vg0 = 2*pi*PI.RoverQ*PI.Ig_FBid(1);           % impluse phasor single pass
        PI.Ig_FBid(1)=[];
-%        disp(['piIndex = ',num2str(PI.piIndex),' ',num2str(PI.Vg0)]); %test
     end
 %%    
     Vg_mc_track_0  = Vg_mc_track_0 * TbAng_coef_mc + PI.Vg0;
@@ -46,7 +45,6 @@ for ii =1:n
         PI.Ig = PI.Ig0 + PI.DIg;            % 发射机电流，注意此处为'+'
         PI.Ig_track = [PI.Ig_track,PI.Ig];
         PI.Ig_FBid  = [PI.Ig_FBid,PI.Ig];
-        % 1/8*Ig^2*Rs/beta_couple
 %         disp(['PI.DIg = ',num2str(PI.DIg)]); %test
     end   
     if piTrackIndex==0
