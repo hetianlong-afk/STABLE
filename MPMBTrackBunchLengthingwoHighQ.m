@@ -1,45 +1,46 @@
-% ¶àÁ£×Ó¶àÊøÍÅ×İÏò×·×Ù-STABLE
-% ÑĞ¾¿Ğ³²¨Ç»ÖÂÊøÍÅÀ­Éì
-% GPU ¼ÓËÙ
-% ×÷Õß£º ºÎÌìÁú
-% Ê±¼ä£º 20200706
+% å¤šç²’å­å¤šæŸå›¢çºµå‘è¿½è¸ª-STABLE
+% ç ”ç©¶è°æ³¢è…”è‡´æŸå›¢æ‹‰ä¼¸
+% GPU-accelerated
+% authorï¼š Tianlong He
+% timeï¼š 20200706
 % time:  20200910 (modified: w/o high Q approximation)
 % time : 20210213 (modified: include the BL of main cavity)
 % time : 20211121 (modified: include HOMs)
 % time : 20220212 (modified: include realistic PI feedback,test)
 % time : 20230212 (modified: include realistic PI feedback)
+% time : 20230326 (fix the bug in the PI feedback)
 clc;clear;
 
 fre_shift_scan=[60:10:100,150:50:250]*1e3; % scan detuning
 
 for Ii = 1:length(fre_shift_scan)
 %% beam parameters
-% HALF ²ÎÊı
+% HALF å‚æ•°
 cspeed = 299792458; 
-sigma_t0 = 10e-12;      % s  ÊøÍÅ¹éÒ»»¯³¤¶È  £¨ÓÃÓÚ¼ÆËãÉÏ¹éÒ»»¯£©
-sigma_e0 = 7.44e-4;     %    ÊøÍÅ¹éÒ»»¯ÄÜÉ¢ 6.598e-4;  1e-3   1.0e-3
-alpha_c  = 9.4e-5;      % ¶¯Á¿½ôËõÒò×Ó 6.3e-5; 8.1e-5;9.4e-5
-tau_s    = 14e-3;       % ×èÄáÊ±¼ä s ¿Éµ÷  È¡½ÏĞ¡µÄÖµ¿É¼ÓËÙÊÕÁ² 14.2
-tau_z    = 14e-3;
-I0     = 350e-3;         % Á÷Ç¿ A   350e-3
-E0     = 2.2e9;          % ÄÜÁ¿ eV
-U0     = 400e3;        % ÄÜËğ eV  600e3   218e3  198.8 186.5
-V_mc   = 1.2e6;          % Ö÷Ç»Ç»Ñ¹ V 1.235e6  0.746e6  0.85  1.44
-h      = 800;            % Ğ³²¨Êı
-n_hc   = 3;
-Q_hc   = 2e8;            % Æ·ÖÊÒòËØ 21e3 48.8e3  5e5
-R_hc   = Q_hc*39;        % ÌØÕ÷×è¿¹ 200  39,45
-C      = 479.86;
-fre_shift = fre_shift_scan(Ii);     % Ê§Ğ³ÆµÂÊ Hz  128300 205940 124300
+sigma_t0 = 10e-12;      % s initial rms bunch length  ï¼ˆç”¨äºè®¡ç®—ä¸Šå½’ä¸€åŒ–ï¼‰
+sigma_e0 = 7.44e-4;     %  rms energy spread
+alpha_c  = 9.4e-5;      %  momentum compaction factor
+tau_s    = 14e-3;       %  radiation damping time
+tau_z    = 14e-3;       %  radiation damping time
+I0     = 350e-3;        %  beam current
+E0     = 2.2e9;         %  beam energy
+U0     = 400e3;         %  energy loss per turn
+V_mc   = 1.2e6;         %  main cavity voltage
+h      = 800;           % harmonic number
+n_hc   = 3;             % harmonic order of HHC
+Q_hc   = 2e8;           % HHC loaded quality factor
+R_hc   = Q_hc*39;       % HHC loaded shunt impedance
+C      = 479.86;        % Circumference of the ring
+fre_shift = fre_shift_scan(Ii);     % HHC detuning 
 % fre_shift = detune_HC_calc(I0,n_hc,C,h,U0,V_mc,R_hc,Q_hc);% in near-optimum lengthening condition
 % Normal-MC
 % Q_mc   = 6095;            % shunt impedance of main cavity
 % R_mc   = 6095*119*3;      % quality factor of main cavity
-% fre_shift_mc = -54.0e3;   % Hz Ö÷Ç»Ê§Ğ³ÆµÂÊ ¸ù¾İ¸ºÔØ½Ç¼ÆËãÊ§Ğ³ÆµÂÊ
+% fre_shift_mc = -54.0e3;   % detuning of main cavity, adjusted according to the loading angle
 % Super-MC
-Q_mc   = 1.1e5;         % shunt impedance of main cavity
-R_mc   = Q_mc*45;        % quality factor of main cavity
-fre_shift_mc = -7.0e3;   % Hz Ö÷Ç»Ê§Ğ³ÆµÂÊ ¸ù¾İ¸ºÔØ½Ç¼ÆËãÊ§Ğ³ÆµÂÊ  -1.2e3 -2.1
+Q_mc   = 1.1e5;             % shunt impedance of main cavity
+R_mc   = Q_mc*45;           % quality factor of main cavity
+fre_shift_mc = -7.0e3;      % detuning of main cavity, adjusted according to the loading angle
 
 % fill pattern
 % pattern(1:10:h)=1;
@@ -160,8 +161,8 @@ Wake_inter    = gpuArray(single(Wake_inter));
 
 %% start tracking Track_num = 1e3
 % charge per macro-particle   : HALF.qc
-% ²»µÈµçºÉÁ¿Ìî³äÊ±£¬Ã¿¸öÊøÍÅµÄºêÁ£×ÓµçºÉÁ¿²»µÈ£¬×¢ÒâÇø±ğ
-HALF.qc   = charge.*pattern * HALF.qc / Par_num;              %ÓÉµ¥¸öÔªËØ±äÎªÒ»ĞĞ¾ØÕó
+% ä¸ç­‰ç”µè·é‡å¡«å……æ—¶ï¼Œæ¯ä¸ªæŸå›¢çš„å®ç²’å­ç”µè·é‡ä¸ç­‰ï¼Œæ³¨æ„åŒºåˆ«
+HALF.qc   = charge.*pattern * HALF.qc / Par_num;              %ç”±å•ä¸ªå…ƒç´ å˜ä¸ºä¸€è¡ŒçŸ©é˜µ
 % induced voltage per macro-particle  : HALF.V_b
 HALF.Vb_hc  = HALF.qc * HALF.wr_hc * HALF.R_hc / HALF.Q_hc; 
 HALF.Vb_mc  = HALF.qc * HALF.wr_mc * HALF.R_mc / HALF.Q_mc; 
@@ -180,18 +181,18 @@ V_mc_load_0      = V_mc_load_0_real+1i*V_mc_load_0_imag;
 % V_mc_load_0=0; 
 end
 
-rot_decay_coef_hc = 1i * HALF.rot_coef_hc - 1 / (2 * HALF.Q_hc);  % Ğı×ª Ë¥¼õÏî
-TbAng_coef_hc     = exp(rot_decay_coef_hc * HALF.angle_hc);       % ×¢Òâ·ûºÅÕı¸º
+rot_decay_coef_hc = 1i * HALF.rot_coef_hc - 1 / (2 * HALF.Q_hc);  % rotation+decay
+TbAng_coef_hc     = exp(rot_decay_coef_hc * HALF.angle_hc);       % 
 exp_ang_coef_hc   = -rot_decay_coef_hc * HALF.wr_hc * sigma_t0;
 
-rot_decay_coef_mc = 1i * HALF.rot_coef_mc - 1 / (2 * HALF.Q_mc);  % Ğı×ª Ë¥¼õÏî
-TbAng_coef_mc     = exp(rot_decay_coef_mc * HALF.angle_mc);       % ×¢Òâ·ûºÅÕı¸º
+rot_decay_coef_mc = 1i * HALF.rot_coef_mc - 1 / (2 * HALF.Q_mc);  % rotation+decay
+TbAng_coef_mc     = exp(rot_decay_coef_mc * HALF.angle_mc);       % 
 exp_ang_coef_mc   = -rot_decay_coef_mc * HALF.wr_mc * sigma_t0;
 
 if ~isempty(Q_hom_m0)
 HALF.Vb_hom  = HALF.qc .* (HALF.wrf_hom_m0 .* HALF.R_hom_m0 ./ HALF.Q_hom_m0); 
-rot_decay_coef_hom = 1i * HALF.rot_coef_hom_m0 - 1 ./ (2 * HALF.Q_hom_m0);   % Ğı×ª Ë¥¼õÏî
-TbAng_coef_hom     = exp(rot_decay_coef_hom .* HALF.angle_hom_m0);           % ×¢Òâ·ûºÅÕı¸º
+rot_decay_coef_hom = 1i * HALF.rot_coef_hom_m0 - 1 ./ (2 * HALF.Q_hom_m0);   % rotation+decay
+TbAng_coef_hom     = exp(rot_decay_coef_hom .* HALF.angle_hom_m0);           % 
 exp_ang_coef_hom   = -rot_decay_coef_hom .* HALF.wrf_hom_m0 * sigma_t0;
 V_hom_load_0_real = zeros(HALF.Q_hom_length,1);
 V_hom_load_0_imag = zeros(HALF.Q_hom_length,1);
@@ -200,12 +201,12 @@ end
 
 wake_kick_coef = HALF.qc * HALF.kick_coef;
 
-% ·¢Éä»úµçÑ¹Ê¸Á¿Ìæ´úÖ®Ç°µÄVrfÊ¸Á¿
+% å‘å°„æœºç”µå‹çŸ¢é‡æ›¿ä»£ä¹‹å‰çš„VrfçŸ¢é‡
 Vg_mc = abs(HALF.Vg_mc_init);
 [Vg_angle]=round(Vb_angle_calc(real(HALF.Vg_mc_init),imag(HALF.Vg_mc_init))*1e12)/1e12;
 HALF.Vg_mc_track = HALF.Vg_mc_init;
 HALF.rfcoef1_track     = HALF.rfcoef1 / HALF.V_mc * Vg_mc;
-fai_s_track            = pi/2-Vg_angle;                    % ·¢Éä»úµçÑ¹Ê¸Á¿µÄÍ¬²½ÏàÎ»
+fai_s_track            = pi/2-Vg_angle;                    % å‘å°„æœºç”µå‹çŸ¢é‡çš„åŒæ­¥ç›¸ä½
 
 Track_num  = 10e4;   % set tracking turns
 % record parameters 
@@ -245,7 +246,7 @@ for i =1:Track_num
             V_load_cpu = double(exp_angle_sum.*HALF.Vb_hom(jj,pattern==1));% *HALF.Vb_hom
             [V_load,V_hom_load_0(jj)]=VoltageLoadCalc_matlab(V_hom_load_0(jj),V_load_cpu,TbAng_coef_hom(jj),pattern);                
 
-            V_load_cpu = V_load(pattern==1) * HALF.kick_coef;   % Ô¼»¯V_load;
+            V_load_cpu = V_load(pattern==1) * HALF.kick_coef;   % çº¦åŒ–V_load;
             V_load     = gpuArray(single(V_load_cpu)); 
             V_hom_load_kick = V_load./exp_angle;
             P = P - real(V_hom_load_kick) + imag(V_hom_load_kick) * HALF.VbImagFactor_hom_m0(jj);
@@ -254,11 +255,11 @@ for i =1:Track_num
 %% Harmonic cavity     
     % beam induced voltage at nominal bucket position HHC
     exp_angle  = exp(exp_ang_coef_hc * Q);
-    exp_angle_sum= gather(sum(exp_angle));       % ºÄÊ± 0.007s sum()º¯Êı½ÏÂı    
+    exp_angle_sum= gather(sum(exp_angle));       % è€—æ—¶ 0.007s sum()å‡½æ•°è¾ƒæ…¢    
     V_load_cpu = double(exp_angle_sum.*HALF.Vb_hc(pattern==1)); % *HALF.Vb_hc  
     [V_load,V_hc_load_0]=VoltageLoadCalc_matlab(V_hc_load_0,V_load_cpu,TbAng_coef_hc,pattern); 
     Vb_hc_track_record(i)=mean(V_load);
-%  Ğ³²¨Ç»Ç»Ñ¹Ê¸Á¿Í¼Ê¾
+%  è°æ³¢è…”è…”å‹çŸ¢é‡å›¾ç¤º
     if mod(i,1000)==0
         figure(13)
         subplot(2,1,1)
@@ -267,7 +268,7 @@ for i =1:Track_num
         subplot(2,1,2)
         plot(angle(V_load)/pi*180);ylabel('Phase [deg]');xlabel('Bucket ID');
     end
-    V_load_cpu = V_load(pattern==1)*HALF.kick_coef;   % Ô¼»¯V_load;
+    V_load_cpu = V_load(pattern==1)*HALF.kick_coef;   % çº¦åŒ–V_load;
     V_load     = gpuArray(single(V_load_cpu));    
     % intrabunch kick    - V_load_kick    real part
     V_hc_load_kick = V_load./exp_angle;   
@@ -275,13 +276,13 @@ for i =1:Track_num
 %% Main cavity       
     % beam induced voltage at nominal bucket position MC
     exp_angle  = exp(exp_ang_coef_mc * Q);
-    exp_angle_sum= gather(sum(exp_angle));       % ºÄÊ± 0.007s sum()º¯Êı½ÏÂı    
+    exp_angle_sum= gather(sum(exp_angle));       % è€—æ—¶ 0.007s sum()å‡½æ•°è¾ƒæ…¢    
     V_load_cpu = double(exp_angle_sum.*HALF.Vb_mc(pattern==1)); % *HALF.Vb_mc
     [Vc_mc,Vg_mc_track,HALF.Vg_mc_track_0,V_load,HALF.V_mc_load_0,PI]=PI_Control(PI,HALF.Vrf_ideal,HALF.Vg_mc_track_0,...
     HALF.V_mc_load_0,V_load_cpu,TbAng_coef_mc,pattern); % every 5120 buckets to do PI
 
 %     if i == 3e4
-%         HALF.Vrf_ideal=HALF.Vrf_ideal*1.08;   % ²âÊÔPI·´À¡¶ÔÇ»Ñ¹Éè¶¨ÖµÏìÓ¦ÄÜÁ¦
+%         HALF.Vrf_ideal=HALF.Vrf_ideal*1.08;   % æµ‹è¯•PIåé¦ˆå¯¹è…”å‹è®¾å®šå€¼å“åº”èƒ½åŠ›
 %     end
 
     Ig_track_num = length(PI.Ig_track);
@@ -292,7 +293,7 @@ for i =1:Track_num
     end
 
     V_mc_kick = gpuArray(single(Vc_mc(pattern==1)*HALF.kick_coef))./exp_angle;
-%   Ö÷Ç»Ç»Ñ¹Ê¸Á¿Í¼Ê¾    
+%   ä¸»è…”è…”å‹çŸ¢é‡å›¾ç¤º    
     if mod(i,1000)==0
         figure(15)
         subplot(2,1,1)
@@ -304,7 +305,7 @@ for i =1:Track_num
         figure(666);
         subplot(2,1,1);plot(abs(PI.Ig_track));ylabel('amplitude');title('generator current');
         subplot(2,1,2);plot(angle(PI.Ig_track));ylabel('phase');
-        % ·¢Éä»ú¹¦ÂÊ
+        % å‘å°„æœºåŠŸç‡
         % Pg_mc = 1/8*PI.Ig_track.^2*R_mc_0/betacoupling*4;
 %         figure(667);plot(abs(Pg_mc)/1e3);ylabel('P_g  [kW]');
     end
@@ -377,7 +378,7 @@ set(gca,'FontName','Times New Roman','FontSize',12);
 subplot(2,2,4);ylabel('\sigma_{\delta} ');xlabel('turns');xlim([1,Track_num]);grid on;
 set(gca,'FontName','Times New Roman','FontSize',12);
 %%
-% Í³¼ÆÑØ×ÅÊøÍÅ ³¤¶È·Ö²¼£¬ÖĞĞÄ·Ö²¼  1:100:2000
+% ç»Ÿè®¡æ²¿ç€æŸå›¢ é•¿åº¦åˆ†å¸ƒï¼Œä¸­å¿ƒåˆ†å¸ƒ  1:100:2000
 figure(2);
 % for i=10
 % subplot(2,1,2);plot(mean(record_Q_mean(end-i:end,:))*HALF.sigma_t0*1e12,'.');hold on;
@@ -399,7 +400,7 @@ set(gca,'FontName','Times New Roman','FontSize',12);xlim([1,Bun_num]);
 subplot(1,2,1);
 % grid minor;
 set(gca,'FontName','Times New Roman','FontSize',12);xlim([1,Bun_num]);
-%%  Í³¼Æ×÷ÃÜ¶È·Ö²¼Í¼  Dq = 0.4;
+%%  ç»Ÿè®¡ä½œå¯†åº¦åˆ†å¸ƒå›¾  Dq = 0.4;
 Dq = 0.5;
 Q_min = min(Q); 
 tau_min = gather(Q_min)*HALF.sigma_t0;
@@ -417,7 +418,7 @@ end
 ylabel('norm.density ');xlabel('\tau [ps]'); 
 xlim([-150,150]);
 set(gca,'FontName','Times New Roman','FontSize',14);
-%% »­³öVgµçÑ¹
+%% ç”»å‡ºVgç”µå‹
 figure(656)
 plot(abs(Vb_hc_track_record)/1e3/mean(abs(Vb_hc_track_record(1:50000))/1e3));title('Harmonic Cavity');hold on;
 plot(angle(Vb_hc_track_record)/pi*180/mean(angle(Vb_hc_track_record(1:50000))/pi*180));hold on;
@@ -430,31 +431,31 @@ plot(Vb_hc_track_record(10000:50000)-1i*mean(imag(Vb_hc_track_record(10000:10000
 xlabel('Real part [V]');
 ylabel('Imag part [V]');
 plot(Vb_hc_track_record(50000:100000)-1i*mean(imag(Vb_hc_track_record(50000:100000))));hold on;
-%% Ö÷Ç»·¢Éä»ú¹¦ÂÊ  PI.Ig_track 
-% ·¢Éä»úµçÁ÷
+%% ä¸»è…”å‘å°„æœºåŠŸç‡  PI.Ig_track 
+% å‘å°„æœºç”µæµ
 figure(666)
 subplot(2,1,1);
 plot(abs(PI.Ig_track));hold on
 subplot(2,1,2);
 plot(angle(PI.Ig_track));hold on;
-%% ·¢Éä»ú¹¦ÂÊ
+%% å‘å°„æœºåŠŸç‡
 Q_mc_0 = 5e8;R_mc_0 = Q_mc_0*44.5; betacoupling = Q_mc_0/HALF.Q_mc-1;% main cavity param.
 figure(667)
 Pg_mc = 1/8*HALF.Ig_track.^2*R_mc_0/betacoupling*4; % *4 due to similar to Ib
 plot(abs(Pg_mc)/1e3);hold on;ylabel('P_g  [kW]');
 
-%% FFT·ÖÎöÕñµ´ÆµÂÊ Q
+%% FFTåˆ†ææŒ¯è¡é¢‘ç‡ Q
 % for i=1:1
 % mean_q = record_Q_mean(5000*(i)+1:5000*(i+1),1)'; % 1 first bunch
-% mean_q = mean_q-mean(mean_q); % È¥DC
+% mean_q = mean_q-mean(mean_q); % å»DC
 % n_turns= length(mean_q);
-% % Í³¼ÆÖÊĞÄµÄÕñµ´ÆµÂÊ
-% % ×¢Òâ´Ë´¦ÊÇÃ¿10È¦¼ÇÂ¼Ò»´ÎÊı¾İ
+% % ç»Ÿè®¡è´¨å¿ƒçš„æŒ¯è¡é¢‘ç‡
+% % æ³¨æ„æ­¤å¤„æ˜¯æ¯10åœˆè®°å½•ä¸€æ¬¡æ•°æ®
 % freqs = 0.00001:1/n_turns:0.5;amp = abs(fft(mean_q));
 % figure(12)
-% % plot(freqs/10,amp(1:length(freqs))/max(amp(1:length(freqs)))); %/10 ±íÊ¾Ã¿10È¦¼ÇÂ¼Ò»´ÎÊı¾İ
+% % plot(freqs/10,amp(1:length(freqs))/max(amp(1:length(freqs)))); %/10 è¡¨ç¤ºæ¯10åœˆè®°å½•ä¸€æ¬¡æ•°æ®
 % % xlim([0,0.5]);
-% plot((freqs/2)*(299792458/HALF.C),amp(1:length(freqs))/max(amp(1:length(freqs)))); %/10 ±íÊ¾Ã¿10È¦¼ÇÂ¼Ò»´ÎÊı¾İ
+% plot((freqs/2)*(299792458/HALF.C),amp(1:length(freqs))/max(amp(1:length(freqs)))); %/10 è¡¨ç¤ºæ¯10åœˆè®°å½•ä¸€æ¬¡æ•°æ®
 % % xlim([25e3,35e3]);
 % hold on;
 % pause(1)
